@@ -1,0 +1,29 @@
+# Entorno virtual
+fastapi/
+venv/
+.env/
+
+# Base de datos
+*.db
+
+# Archivos multimedia
+/media/
+media/
+
+# Cachés
+__pycache__/
+*.pyc
+
+# Pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# VSCode
+.vscode/
+
+# PyCharm
+.idea/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
