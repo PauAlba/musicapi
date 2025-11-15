@@ -288,6 +288,9 @@ def get_all(db: Session = Depends(get_db)):
 
 
 # --- ROOT ---
+from fastapi.responses import RedirectResponse
+
 @app.get("/")
 def root():
-    return {"ok": True, "docs": "/docs"}
+    return RedirectResponse(url="/docs")
+
