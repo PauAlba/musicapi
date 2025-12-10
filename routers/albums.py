@@ -17,22 +17,26 @@ router = APIRouter(
 
 @router.post("/")
 def create_album(
+    # --- Parámetros de Texto (Form) ---
     title: str = Form(...),
     description: str = Form(None),
     artist_id: int = Form(...),
     category: str = Form(...),
-    cover_file: UploadFile = File(None), # Opción 1
-    cover_link: str = Form(None),       # Opción 2
+    cover_link: str = Form(None),       
+
+
+    cover_file: UploadFile = File(None), 
+
     db: Session = Depends(get_db)
 ):
     """
-    Crea un nuevo álbum. Sube la portada si es un archivo o usa el link URL proporcionado.
+    Crea un nuevo álbum. Acepta un archivo subido o un link URL.
     """
     final_cover_url = None
     
     
     if cover_file and cover_file.filename:
-        # Subir el archivo binario a Cloudinary
+        
         final_cover_url = upload_file_to_cloudinary(cover_file, folder="music_app_album_covers")
         
         if not final_cover_url:
@@ -40,17 +44,17 @@ def create_album(
             
    
     elif cover_link:
-        # Usar el link directo
         final_cover_url = cover_link
 
-    # 3. Guardar en BD con la URL final
+  
     a = Album(
         title=title, 
         description=description, 
         artist_id=artist_id,
         category=category,
-        cover_url=final_cover_url 
+        cover_url=final_cover_url
     )
+
     db.add(a)
     db.commit()
     db.refresh(a)
