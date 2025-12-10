@@ -56,8 +56,8 @@ Base.metadata.create_all(bind=engine)
 
 playlist_songs = Table(
     'playlist_songs', Base.metadata,
-    Column('playlist_id', Integer, ForeignKey('playlists.id')),
-    Column('song_id', Integer, ForeignKey('song.id'))
+    Column('playlist_id', Integer, ForeignKey('playlists.id'), primary_key=True),  
+    Column('song_id', Integer, ForeignKey('song.id'), primary_key=True)            
 )
 
 class UserDB(Base):
