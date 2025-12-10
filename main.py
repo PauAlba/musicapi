@@ -32,7 +32,7 @@ if not DATABASE_URL:
 
 CONNECT_ARGS = {
     "ssl": {
-        "ssl_mode": "preferred" 
+        "ssl_mode": "required" 
     }
 }
 # Crear conexión
@@ -49,7 +49,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
 
-
+Base.metadata.create_all(bind=engine)
 # MODELOS(Tablas)
 
 
