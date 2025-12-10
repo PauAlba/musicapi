@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine, Boolean
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
 import shutil
 import uuid
@@ -37,14 +37,17 @@ class Artist(Base):
     name = Column(String(200), nullable=False)
     bio = Column(Text, nullable=True)
     country = Column(String(100), nullable=True)
+    artist_pic = Column(String(400), nullable = True) #agregado
     albums = relationship("Album", back_populates="artist")
     songs = relationship("Song", back_populates="artist")
+    
 
 class Album(Base):
     __tablename__ = "album"
     id = Column(Integer, primary_key=True)
     title = Column(String(200), nullable=False)
     description = Column(Text, nullable=True)
+    category = Column(Text, nullable = False) #agregado
     cover_url = Column(String(300), nullable=True)
     artist_id = Column(Integer, ForeignKey("artist.id"))
     artist = relationship("Artist", back_populates="albums")
@@ -68,6 +71,12 @@ class UserDB(Base):
     password = Column(String(150))
     favorites_json = Column(Text, default="{}")
 
+class Like(Base):
+    __tablename__ = "likes"
+    user_id = Column(Integer, ForeignKey("users.id"), primary_key=True)
+    item_type = Column(String(50), primary_key=True)  # "artist" | "album" | "song"
+    item_id = Column(Integer, primary_key=True)
+
 Base.metadata.create_all(bind=engine)
 
 #  schemas
@@ -75,12 +84,14 @@ class ArtistCreate(BaseModel):
     name: str
     bio: Optional[str] = None
     country: Optional[str] = None
+    artist_pic: str #agregado
 
 class AlbumCreate(BaseModel):
     title: str
     description: Optional[str] = None
     artist_id: int
     cover_url: Optional[str] = None
+    category: str #agregado
 
 class SongCreate(BaseModel):
     title: str
@@ -92,15 +103,15 @@ class UserCreate(BaseModel):
     username: str
     password: str
 
-class Favorites(BaseModel):
-    artists: List[int] = []
-    albums: List[int] = []
-    songs: List[int] = []
+# class Favorites(BaseModel):
+#     artists: List[int] = []
+#     albums: List[int] = []
+#     songs: List[int] = []
 
 class UserOut(BaseModel):
     id: int
     username: str
-    favorites: Favorites
+    #favorites: Favorites
 
 # session 
 def get_db():
@@ -207,23 +218,23 @@ def create_user(p: UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return UserOut(id=user.id, username=user.username, favorites=json.loads(user.favorites_json))
+    return UserOut(id=user.id, username=user.username)#, favorites=json.loads(user.favorites_json))
 
-@app.post("/users/{user_id}/favorites")
-def update_favorites(user_id: int, fav: Favorites, db: Session = Depends(get_db)):
-    user = db.query(UserDB).get(user_id)
-    if not user:
-        raise HTTPException(404, "User not found")
-    user.favorites_json = json.dumps(fav.dict())
-    db.commit()
-    return {"updated": True}
+# @app.post("/users/{user_id}/favorites")
+# def update_favorites(user_id: int, fav: Favorites, db: Session = Depends(get_db)):
+#     user = db.query(UserDB).get(user_id)
+#     if not user:
+#         raise HTTPException(404, "User not found")
+#     user.favorites_json = json.dumps(fav.dict())
+#     db.commit()
+#     return {"updated": True}
 
 @app.get("/users/{user_id}", response_model=UserOut)
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user = db.query(UserDB).get(user_id)
     if not user:
         raise HTTPException(404, "User not found")
-    return UserOut(id=user.id, username=user.username, favorites=json.loads(user.favorites_json))
+    return UserOut(id=user.id, username=user.username) #favorites=json.loads(user.favorites_json))
 
 # get all
 @app.get("/all")
@@ -238,3 +249,36 @@ def get_all(db: Session = Depends(get_db)):
 @app.get("/")
 def root():
     return RedirectResponse(url="/docs")
+
+@app.post("/users/{user_id}/like/{item_type}/{item_id}")
+def toggle_like(user_id: int, item_type: str, item_id: int, db: Session = Depends(get_db)):
+    if item_type not in ["artist", "album", "song"]:
+        raise HTTPException(400, "Invalid item type")
+
+    like = db.query(Like).filter_by(
+        user_id=user_id,
+        item_type=item_type,
+        item_id=item_id
+    ).first()
+
+    if like:
+        db.delete(like)
+        db.commit()
+        return {"liked": False}
+
+    new_like = Like(user_id=user_id, item_type=item_type, item_id=item_id)
+    db.add(new_like)
+    db.commit()
+    return {"liked": True}
+
+@app.get("/users/{user_id}/likes")
+def get_likes(user_id: int, db: Session = Depends(get_db)):
+    likes = db.query(Like).filter_by(user_id=user_id).all()
+
+    result = {"artists": [], "albums": [], "songs": []}
+
+    for l in likes:
+        result[l.item_type + "s"].append(l.item_id)
+
+    return result
+
