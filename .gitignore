@@ -27,3 +27,53 @@ pip-delete-this-directory.txt
 # Archivos del sistema
 .DS_Store
 Thumbs.db
+
+
+
+# ARCHIVOS LOCALES DE BASE DE DATOS
+
+music.db
+*.sqlite
+*.sqlite3
+
+# ARCHIVOS DE CREDENCIALES/SECRETOS
+
+.env
+.flaskenv
+
+# 3. ARCHIVOS LOCALES DE MEDIA
+
+media/
+media/*
+
+
+# Directorio de entornos virtuales
+
+.venv/
+venv/
+env/
+/bin/
+/include/
+/lib/
+/lib64/
+
+# Logs y bases de datos de prueba
+*.log
+*.sql
+*.dat
+
+# Directorio de Build/Dist (si generas paquetes)
+dist/
+build/
+*.egg-info/
+
+
+
+# Archivos de configuración de VS Code
+.vscode/
+
+# Archivos temporales de Mac OS
+.DS_Store
+
+# Archivos temporales de Windows
+Thumbs.db
