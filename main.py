@@ -147,8 +147,7 @@ class ArtistCreate(BaseModel):
     name: str
     bio: Optional[str] = None
     country: Optional[str] = None
-    artist_pic: str
-
+    
 class AlbumCreate(BaseModel):
     title: str
     description: Optional[str] = None
@@ -186,13 +185,16 @@ def get_db():
         yield db
     finally:
         db.close()
+def get_password_hash(password: str) -> str:
+    """Crea el hash de la contraseña (truncando a 72 caracteres)."""
+    return pwd_context.hash(password[:72])
 
-def get_password_hash(password, hashed_password):
-    safe_password = password[:72] 
+# CORREGIDO: Esta función debe VERIFICAR
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifica la contraseña."""
+    # Truncamos la contraseña plana AQUI para que coincida con el hash
+    safe_password = plain_password[:72] 
     return pwd_context.verify(safe_password, hashed_password)
-
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
 
 def upload_file_to_cloudinary(file: UploadFile, folder: str = "music_app") -> str:
     """Sube archivo a Cloudinary y devuelve la URL"""
@@ -218,10 +220,13 @@ def create_user(p: UserCreate, db: Session = Depends(get_db)):
     if db.query(UserDB).filter((UserDB.username == p.username) | (UserDB.email == p.email)).first():
         raise HTTPException(status_code=400, detail="Usuario o correo ya registrado")
     
+    # Aquí usamos la función corregida
+    hashed_password = get_password_hash(p.password) 
+    
     new_user = UserDB(
         username=p.username, 
         email=p.email, 
-        hashed_password=get_password_hash(p.password)
+        hashed_password=hashed_password
     )
     db.add(new_user)
     db.commit()
@@ -238,8 +243,30 @@ def login(creds: UserLogin, db: Session = Depends(get_db)):
 
 # ARTISTAS 
 @app.post("/artists")
-def create_artist(p: ArtistCreate, db: Session = Depends(get_db)):
-    a = Artist(**p.dict())
+def create_artist(
+    name: str = Form(...),
+    bio: str = Form(None),
+    country: str = Form(None),
+    artist_pic_file: UploadFile = File(None), # Ahora recibe el archivo
+    db: Session = Depends(get_db)
+):
+    artist_pic_url = None
+    
+    # 1. Si se adjuntó una imagen, se sube a Cloudinary
+    if artist_pic_file:
+        # Usamos la misma función, pero con una carpeta diferente
+        artist_pic_url = upload_file_to_cloudinary(artist_pic_file, folder="music_app_artist_pics")
+        
+        if not artist_pic_url:
+            raise HTTPException(500, "Error al subir la imagen del artista a Cloudinary")
+
+    # 2. Guardar en BD con la URL devuelta por Cloudinary
+    a = Artist(
+        name=name, 
+        bio=bio, 
+        country=country,
+        artist_pic=artist_pic_url # <-- Aquí se guarda el link
+    )
     db.add(a)
     db.commit()
     db.refresh(a)
@@ -356,3 +383,4 @@ def get_all_data(db: Session = Depends(get_db)):
         "albums": db.query(Album).all(),
         "songs": db.query(Song).all()
     }
+    
