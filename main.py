@@ -65,6 +65,7 @@ class UserDB(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     username = Column(String(150), unique=True)
+    email = Column(String(150), unique=True, nullable=False)
     password = Column(String(150))
     favorites_json = Column(Text, default="{}")
 
@@ -90,6 +91,11 @@ class SongCreate(BaseModel):
 
 class UserCreate(BaseModel):
     username: str
+    email:str
+    password: str
+
+class UserLogin(BaseModel):
+    username: str
     password: str
 
 class Favorites(BaseModel):
@@ -100,6 +106,7 @@ class Favorites(BaseModel):
 class UserOut(BaseModel):
     id: int
     username: str
+    email: str
     favorites: Favorites
 
 # session 
@@ -199,15 +206,39 @@ def get_song(song_id: int, db: Session = Depends(get_db)):
 # user creation and favorites
 @app.post("/users", response_model=UserOut)
 def create_user(p: UserCreate, db: Session = Depends(get_db)):
+
+    existing_user = db.query(UserDB).filter((UserDB.username == p.username) | (UserDB.email == p.email)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Este nombre de usuario o correo ya está en uso")
+    
+    existing_email = db.query(UserDB).filter(UserDB.email == p.email).first()
+    if existing_email:
+        raise HTTPException(status_code=400, detail="Este correo ya está en uso")
+
     user = UserDB(
         username=p.username,
+        email=p.email,
         password=p.password,
         favorites_json=json.dumps({"artists": [], "albums": [], "songs": []})
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    return UserOut(id=user.id, username=user.username, favorites=json.loads(user.favorites_json))
+    return UserOut(id=user.id, username=user.username, email=user.email, favorites=json.loads(user.favorites_json))
+
+@app.post("/login")
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    db_user = db.query(UserDB).filter(UserDB.email == user.email).first()
+    
+    if not db_user or db_user.password != user.password:
+        raise HTTPException(status_code=400, detail="Correo o contraseña incorrectos")
+    
+    return UserOut(
+        id=db_user.id, 
+        username=db_user.username, 
+        email=db_user.email, 
+        favorites=json.loads(db_user.favorites_json)
+    )
 
 @app.post("/users/{user_id}/favorites")
 def update_favorites(user_id: int, fav: Favorites, db: Session = Depends(get_db)):
