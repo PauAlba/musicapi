@@ -1,18 +1,23 @@
 # Base.metadata.create_all(bind=engine)
 # MODELOS(Tablas)
-import os
-from typing import List, Optional
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
-from fastapi.responses import RedirectResponse
-from pydantic import BaseModel
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine, Table
-from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
-from passlib.context import CryptContext
+# import os
+# from typing import List, Optional
+# from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
+# from fastapi.responses import RedirectResponse
+# from pydantic import BaseModel
+# from sqlalchemy import Column, Integer, String, Text, ForeignKey, create_engine, Table
+# from sqlalchemy.orm import declarative_base, sessionmaker, relationship, Session
+# from passlib.context import CryptContext
+# from sqlalchemy import Column, Integer, String, Text, ForeignKey, Table
+# from sqlalchemy.orm import relationship
+# from .database import Base
+
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Table
 from sqlalchemy.orm import relationship
-from .database import Base
 
-
+# Importación ABSOLUTA para la Base. 
+# Esto asume que database.py está accesible en el nivel raíz del proyecto.
+from database import Base
 
 playlist_songs = Table(
     'playlist_songs', Base.metadata,
