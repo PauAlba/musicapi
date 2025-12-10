@@ -152,7 +152,7 @@ class AlbumCreate(BaseModel):
     title: str
     description: Optional[str] = None
     artist_id: int
-    cover_url: Optional[str] = None
+    # cover_url: Optional[str] = None
     category: str
 
 class SongCreate(BaseModel): # Solo datos, el archivo va aparte
@@ -277,9 +277,34 @@ def get_artists(db: Session = Depends(get_db)):
     return db.query(Artist).all()
 
 # ALBUMS 
+# ALBUMS 
 @app.post("/albums")
-def create_album(p: AlbumCreate, db: Session = Depends(get_db)):
-    a = Album(**p.dict())
+def create_album(
+    title: str = Form(...),
+    description: str = Form(None),
+    artist_id: int = Form(...),
+    category: str = Form(...),
+    cover_file: UploadFile = File(None), # Ahora recibe el archivo de portada
+    db: Session = Depends(get_db)
+):
+    cover_url = None
+    
+    # 1. Si se adjuntó un archivo, subirlo a Cloudinary
+    if cover_file:
+        # Reutilizamos la función de utilidad
+        cover_url = upload_file_to_cloudinary(cover_file, folder="music_app_album_covers")
+        
+        if not cover_url:
+            raise HTTPException(500, "Error al subir la portada del álbum a Cloudinary")
+
+    # 2. Guardar en BD con la URL generada
+    a = Album(
+        title=title, 
+        description=description, 
+        artist_id=artist_id,
+        category=category,
+        cover_url=cover_url # <-- Aquí se guarda el link
+    )
     db.add(a)
     db.commit()
     db.refresh(a)
