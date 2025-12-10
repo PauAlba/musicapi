@@ -2,14 +2,10 @@
 import os
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
-from passlib.context import CryptContext
-import cloudinary # Necesario si la configuración se hace aquí, pero lo movemos a utils.py
-
-# Importaciones de módulos locales
-from .database import Base, engine 
-from .routers import users, artists, albums, songs, playlists 
-
-from . import utils 
+# NOTA: Importaciones ABSOLUTAS (sin punto '.')
+from database import Base, engine 
+from routers import users, artists, albums, songs, playlists 
+import utils
 
 
 Base.metadata.create_all(bind=engine)
