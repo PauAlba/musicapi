@@ -10,35 +10,60 @@ router = APIRouter(
     tags=["Artistas"]
 )
 
+# routers/artists.py
+
+# ... (tus imports)
+
+# Importamos Form para manejar campos de texto/link
+from fastapi import APIRouter, Depends, HTTPException, File, Form, UploadFile
+# ... (resto de imports)
+
+router = APIRouter(
+    prefix="/artists",
+    tags=["Artistas"]
+)
+
 @router.post("/")
 def create_artist(
     name: str = Form(...),
     bio: str = Form(None),
     country: str = Form(None),
-    artist_pic_file: UploadFile = File(None), # Ahora recibe el archivo
+    artist_pic_file: UploadFile = File(None), # Opción 1
+    artist_pic_link: str = Form(None),       # Opción 2
     db: Session = Depends(get_db)
 ):
-    artist_pic_url = None
+    """
+    Crea un nuevo artista. Acepta una imagen subida o un link URL.
+    """
+    final_pic_url = None
     
-    # 1. Si se adjuntó una imagen, se sube a Cloudinary
-    if artist_pic_file:
-        # Usamos la misma función, pero con una carpeta diferente
-        artist_pic_url = upload_file_to_cloudinary(artist_pic_file, folder="music_app_artist_pics")
+   
+    if artist_pic_file and artist_pic_file.filename:
         
-        if not artist_pic_url:
-            raise HTTPException(500, "Error al subir la imagen del artista a Cloudinary")
-
-    # 2. Guardar en BD con la URL devuelta por Cloudinary
+        # Subir el archivo binario a Cloudinary
+        final_pic_url = upload_file_to_cloudinary(artist_pic_file, folder="music_app_artist_pics")
+        
+        if not final_pic_url:
+            raise HTTPException(500, "Error al subir la imagen a Cloudinary")
+            
+    elif artist_pic_link:
+        
+        final_pic_url = artist_pic_link
+        
+    # 3. Guardar en BD
     a = Artist(
         name=name, 
         bio=bio, 
         country=country,
-        artist_pic=artist_pic_url # <-- Aquí se guarda el link
+        
+        artist_pic=final_pic_url 
     )
     db.add(a)
     db.commit()
     db.refresh(a)
     return a
+
+
 
 @router.get("/")
 def get_artists_all(db: Session = Depends(get_db)):
