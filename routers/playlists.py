@@ -4,9 +4,9 @@ from sqlalchemy.orm import Session
 from typing import Optional
 
 # Importaciones de módulos locales
-from ..database import get_db
-from ..models import Playlist, Song, UserDB, Like
-from ..schemas import PlaylistCreate, PlaylistAddSong, PlaylistOut
+from database import get_db
+from models import Playlist, Song, UserDB, Like
+from schemas import PlaylistCreate, PlaylistAddSong, PlaylistOut
 
 # 1. Definición del Router
 # Usamos un prefijo simple, ya que los likes son globales y la playlist es específica

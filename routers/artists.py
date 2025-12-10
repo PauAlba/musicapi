@@ -1,9 +1,9 @@
 # routers/artists.py
 from fastapi import APIRouter, Depends, HTTPException, File, Form, UploadFile
 from sqlalchemy.orm import Session
-from ..database import get_db
-from ..models import Artist
-from ..utils import upload_file_to_cloudinary
+from database import get_db
+from models import Artist
+from utils import upload_file_to_cloudinary
 
 router = APIRouter(
     prefix="/artists",

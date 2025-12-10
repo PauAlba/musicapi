@@ -1,13 +1,15 @@
-# routers/users.py
+# routers/users.py - Versión Corregida
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-# Importaciones de módulos locales
-from ..database import get_db
-from ..models import UserDB # Solo el modelo de SQLAlchemy
-from ..schemas import UserCreate, UserLogin, UserOut # Schemas de Pydantic
-from ..utils import get_password_hash, verify_password
+# Importaciones ABSOLUTAS (directas a los archivos de la raíz)
+from database import get_db
+from models import UserDB 
+from schemas import UserCreate, UserLogin, UserOut 
+from utils import get_password_hash, verify_password 
+
+# ... el resto del código ...
 
 router = APIRouter(
     prefix="/users",

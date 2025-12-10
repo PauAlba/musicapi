@@ -4,10 +4,10 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 # Importaciones de módulos locales
-from ..database import get_db
-from ..models import Album
-from ..schemas import AlbumCreate # Lo usamos como referencia para los campos
-from ..utils import upload_file_to_cloudinary
+from database import get_db
+from models import Album
+from schemas import AlbumCreate # Lo usamos como referencia para los campos
+from utils import upload_file_to_cloudinary
 
 # 1. Definición del Router
 router = APIRouter(
