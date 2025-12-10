@@ -8,18 +8,13 @@ import cloudinary # Necesario si la configuración se hace aquí, pero lo movemo
 # Importaciones de módulos locales
 from .database import Base, engine 
 from .routers import users, artists, albums, songs, playlists 
-# Importamos utils para asegurar que la configuración de Cloudinary se ejecute
+
 from . import utils 
 
-# ----------------------------------------------------
-# 1. EJECUCIÓN CRÍTICA: Creación de tablas
-# ----------------------------------------------------
-# Crea las tablas si no existen, usando la Base y el engine de database.py
+
 Base.metadata.create_all(bind=engine)
 
-# ----------------------------------------------------
-# 2. Inicialización y Conexión de Routers
-# ----------------------------------------------------
+
 app = FastAPI(
     title="Música API - Modularizada", 
     description="Backend para App de Streaming Musical con FastAPI y Cloudinary."
