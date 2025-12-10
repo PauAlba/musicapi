@@ -49,7 +49,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 app = FastAPI()
 
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 # MODELOS(Tablas)
 
 
@@ -174,7 +174,7 @@ class PlaylistOut(BaseModel):
     name: str
     songs: List[dict] = [] # Simplificado
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 # 4. FUNCIONES DE UTILIDAD
@@ -187,9 +187,9 @@ def get_db():
     finally:
         db.close()
 
-def get_password_hash(password):
+def get_password_hash(password, hashed_password):
     safe_password = password[:72] 
-    return pwd_context.hash(safe_password)
+    return pwd_context.verify(safe_password, hashed_password)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
