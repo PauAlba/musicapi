@@ -141,7 +141,7 @@ class UserOut(BaseModel):
     username: str
     email: str
     class Config:
-        orm_mode = True
+       from_attributes = True
 
 class ArtistCreate(BaseModel):
     name: str
@@ -188,7 +188,8 @@ def get_db():
         db.close()
 
 def get_password_hash(password):
-    return pwd_context.hash(password)
+    safe_password = password[:72] 
+    return pwd_context.hash(safe_password)
 
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
